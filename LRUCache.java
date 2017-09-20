@@ -7,40 +7,84 @@ public class LRUCache {
         this.capacity = capacity;
     }
     
+    private void deleteNode(Node node) {
+        map.remove(node.getKey());
+        if(node.getPreviousNode() == null && node.getNextNode() == null) {
+            headOfTheList = null;
+        }
+        else if(node.getPreviousNode() == null && node.getNextNode() != null) {
+            node.getNextNode().setPreviousNode(null);
+            headOfTheList = node.getNextNode();
+        }
+        else if(node.getNextNode() == null && node.getPreviousNode() != null) {
+            node.getPreviousNode().setNextNode(null);
+        }
+        else {
+            node.getPreviousNode().setNextNode(node.getNextNode());
+            node.getNextNode().setPreviousNode(node.getPreviousNode());
+        }
+    }
+    
+    private void insertNode(Node node) {
+        map.put(node.getKey(), node);
+        if(headOfTheList == null) headOfTheList = node;
+        else {
+            headOfTheList.setPreviousNode(node);
+            node.setNextNode(headOfTheList);
+            node.setPreviousNode(null);
+            headOfTheList = node;
+        }
+    }
+    
+    private void printList() {
+        Node node = headOfTheList;
+        System.out.println("Printing list");
+        while(node != null) {
+            System.out.println("Key: "+node.getKey() + " Value: " + node.getValue());
+            node = node.getNextNode();
+        }
+        System.out.println("Ending list");
+    }
+    
     public int get(int key) {
+    //    System.out.println("Get key: " + key);
         if(map.containsKey(key)) {
             Node node = map.get(key);
-            if(node.getPreviousNode() != null) {
-               node.getPreviousNode().setNextNode(node.getNextNode());
-               node.setNextNode(headOfTheList);
-               headOfTheList = node;
-            }
+            deleteNode(node);
+            insertNode(node);
+     //       printList();
             return node.getValue();
         }
         return -1;
     }
     
     public void set(int key, int value) {
+      //  System.out.println("Set key: " + key + " value: " + value);
+        if(map.containsKey(key)) {
+            Node node  = map.get(key);
+            node.setValue(value);
+            deleteNode(node);
+            insertNode(node);
+       //     printList();
+            return ;
+        }
          if(map.size() == this.capacity) {
              if(capacity == 1) {
-                 map.remove(headOfTheList.getKey());
-                 headOfTheList = null;
+                 deleteNode(headOfTheList);
+                 map.remove(key);
              }else {
-                Node node = headOfTheList;
-                for(int i = 1; i <= this.capacity-2;i++) {
-                    node = node.getNextNode();
+                Node lruNode = headOfTheList;
+                for(int i = 1; i <= this.capacity-1;i++) {
+                    lruNode = lruNode.getNextNode();
                 }
-                Node lruNode = node.getNextNode();
-                map.remove(lruNode.getKey());
-                node.setNextNode(null);   
+                deleteNode(lruNode);
              }
         }
         Node node = new Node();
         node.setKey(key);
         node.setValue(value);
-        node.setNextNode(headOfTheList);
-        headOfTheList = node;
-        map.put(key, node);
+        insertNode(node);
+     //   printList();
     }
     
     public static class Node {
